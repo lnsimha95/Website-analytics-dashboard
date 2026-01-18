@@ -1,0 +1,129 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Website Analytics Interactive Dashboard</title>
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fa;
+      margin: 20px;
+      color: #1f2933;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #555;
+      margin-bottom: 30px;
+    }
+    .upload-box {
+      text-align: center;
+      padding: 20px;
+      border: 2px dashed #cbd5e1;
+      background: #ffffff;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+    .chart {
+      background: #ffffff;
+      padding: 20px;
+      margin-bottom: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+  </style>
+</head>
+<body>
+
+<h1>Website Analytics Dashboard</h1>
+<div class="subtitle">Upload your JSON file to explore clicks, conversions, spend, and revenue</div>
+
+<div class="upload-box">
+  <input type="file" id="fileInput" accept=".json" />
+</div>
+
+<div id="spendRevenue" class="chart"></div>
+<div id="clicksConversions" class="chart"></div>
+<div id="ctrTrend" class="chart"></div>
+<div id="blogImpact" class="chart"></div>
+<div id="bounceRevenue" class="chart"></div>
+
+<script>
+document.getElementById("fileInput").addEventListener("change", handleFile);
+
+function handleFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    const data = JSON.parse(e.target.result);
+    buildDashboard(data);
+  };
+  reader.readAsText(file);
+}
+
+function buildDashboard(data) {
+  const dates = data.map(d => d.date);
+  const clicks = data.map(d => d.clicks);
+  const conversions = data.map(d => d.total_conversions);
+  const spend = data.map(d => d.ad_spend_inr);
+  const revenue = data.map(d => d.revenue_inr);
+  const ctr = data.map(d => d.ctr_percent);
+  const blogVisitors = data.map(d => d.blog_visitors);
+  const blogForms = data.map(d => d.blog_form_fills);
+  const bounceRate = data.map(d => d.bounce_rate_percent);
+
+  Plotly.newPlot("spendRevenue", [
+    { x: dates, y: spend, name: "Ad Spend (INR)", type: "scatter" },
+    { x: dates, y: revenue, name: "Revenue (INR)", type: "scatter", yaxis: "y2" }
+  ], {
+    title: "Ad Spend vs Revenue Over Time",
+    yaxis: { title: "Ad Spend (INR)" },
+    yaxis2: { title: "Revenue (INR)", overlaying: "y", side: "right" }
+  });
+
+  Plotly.newPlot("clicksConversions", [
+    { x: dates, y: clicks, name: "Clicks", type: "bar" },
+    { x: dates, y: conversions, name: "Conversions", type: "bar" }
+  ], {
+    title: "Clicks vs Conversions",
+    barmode: "group"
+  });
+
+  Plotly.newPlot("ctrTrend", [{
+    x: dates,
+    y: ctr,
+    type: "scatter",
+    name: "CTR (%)"
+  }], {
+    title: "CTR Trend Over Time"
+  });
+
+  Plotly.newPlot("blogImpact", [
+    { x: dates, y: blogVisitors, name: "Blog Visitors", type: "scatter" },
+    { x: dates, y: blogForms, name: "Blog Form Fills", type: "scatter" }
+  ], {
+    title: "Blog Traffic Contribution to Leads"
+  });
+
+  Plotly.newPlot("bounceRevenue", [{
+    x: bounceRate,
+    y: revenue,
+    mode: "markers",
+    name: "Revenue vs Bounce Rate"
+  }], {
+    title: "Bounce Rate vs Revenue",
+    xaxis: { title: "Bounce Rate (%)" },
+    yaxis: { title: "Revenue (INR)" }
+  });
+}
+</script>
+
+</body>
+</html>
